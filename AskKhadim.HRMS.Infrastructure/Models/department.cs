@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AskKhadim.HRMS.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace AskKhadim.HRMS.Infrastructure.Models;
@@ -12,7 +13,7 @@ namespace AskKhadim.HRMS.Infrastructure.Models;
 [Index("department_name", Name = "IX_departments_name")]
 [Index("parent_department_id", Name = "IX_departments_parent")]
 [Index("department_code", Name = "UQ_departments_code", IsUnique = true)]
-public partial class department
+public partial class department : OrgScopedEntity
 {
     [Key]
     public Guid department_id { get; set; }

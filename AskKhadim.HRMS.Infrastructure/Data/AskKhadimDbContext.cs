@@ -1,20 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Security;
+using AskKhadim.HRMS.Application.Common.Security;
+using AskKhadim.HRMS.Domain.Common;
 using AskKhadim.HRMS.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace AskKhadim.HRMS.Infrastructure.Data;
 
 public partial class AskKhadimDbContext : DbContext
 {
-    public AskKhadimDbContext()
+    private readonly ICurrentUser _currentUser;
+
+    public AskKhadimDbContext(
+        DbContextOptions<AskKhadimDbContext> options,
+        ICurrentUser currentUser
+    ) : base(options)
     {
+        _currentUser = currentUser
+            ?? throw new InvalidOperationException(
+                "ICurrentUser is not available. DbContext must be created within an authenticated request."
+            );
     }
 
-    public AskKhadimDbContext(DbContextOptions<AskKhadimDbContext> options)
-        : base(options)
-    {
-    }
     public DbSet<organization_invitation> organization_invitations { get; set; } = null!;
 
 
@@ -81,6 +91,9 @@ public partial class AskKhadimDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
+        ApplyOrganizationFilters(modelBuilder);
         modelBuilder.Entity<core_user>(entity =>
         {
             entity.Property(e => e.created_at).HasDefaultValueSql("(sysutcdatetime())");
@@ -330,4 +343,67 @@ public partial class AskKhadimDbContext : DbContext
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+    private void ApplyOrganizationFilters(ModelBuilder modelBuilder)
+    {
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(OrgScopedEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                var method = typeof(AskKhadimDbContext)
+                    .GetMethod(nameof(SetOrgFilter),
+                        BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .MakeGenericMethod(entityType.ClrType);
+
+                method.Invoke(this, new object[] { modelBuilder });
+            }
+        }
+    }
+
+    private void SetOrgFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : OrgScopedEntity
+    {
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
+            _currentUser.IsSuperAdmin ||
+            e.OrganizationId == _currentUser.OrganizationId
+        );
+    }
+
+    public override int SaveChanges()
+    {
+        EnforceOrgOwnership();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        EnforceOrgOwnership();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+    private void EnforceOrgOwnership()
+    {
+        if (_currentUser.IsSuperAdmin) return;
+
+        foreach (var entry in ChangeTracker.Entries<OrgScopedEntity>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.OrganizationId =
+                    _currentUser.OrganizationId
+                    ?? throw new SecurityException("Org missing");
+            }
+
+            if (entry.State == EntityState.Modified)
+            {
+                var originalOrg =
+                    entry.OriginalValues.GetValue<Guid>("OrganizationId");
+
+                if (originalOrg != _currentUser.OrganizationId)
+                    throw new SecurityException("Cross-org update blocked");
+            }
+        }
+    }
+
 }
+

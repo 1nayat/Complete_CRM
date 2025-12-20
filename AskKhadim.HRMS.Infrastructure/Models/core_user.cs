@@ -6,11 +6,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AskKhadim.HRMS.Infrastructure.Models;
 
-[Index("employee_id", Name = "IX_core_users_employee_id")]
-[Index("last_login", Name = "IX_core_users_last_login")]
-[Index("email", Name = "UQ_core_users_email", IsUnique = true)]
-[Index("employee_id", Name = "UQ_core_users_employee_id", IsUnique = true)]
-[Index("user_uuid", Name = "UQ_core_users_user_uuid", IsUnique = true)]
+[Index(nameof(organization_id), nameof(email), IsUnique = true, Name = "UQ_core_users_org_email")]
+[Index(nameof(organization_id), nameof(employee_id), IsUnique = true, Name = "UQ_core_users_org_employee")]
+[Index(nameof(organization_id), Name = "IX_core_users_org")]
+[Index(nameof(last_login), Name = "IX_core_users_last_login")]
+[Index(nameof(user_uuid), IsUnique = true, Name = "UQ_core_users_user_uuid")]
+
 public partial class core_user
 {
     [Key]
@@ -49,7 +50,7 @@ public partial class core_user
     [Precision(3)]
     public DateTime updated_at { get; set; }
 
-    public Guid? organization_id { get; set; }
+    public Guid ? organization_id { get; set; }
 
     [StringLength(500)]
     public string? security_question { get; set; }

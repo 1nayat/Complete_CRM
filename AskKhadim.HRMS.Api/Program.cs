@@ -1,12 +1,16 @@
 // Program.cs
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using Microsoft.EntityFrameworkCore;
+using AskKhadim.HRMS.Api.Security;
+using AskKhadim.HRMS.Application.Common.Security;
 
 // Adjust these if your concrete types live in different namespaces:
 using AskKhadim.HRMS.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;         // AskKhadimDbContext
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 // using AskKhadim.HRMS.Infrastructure.Security;  // optional handlers/requirements
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +33,8 @@ builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 
 
@@ -63,11 +69,14 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSection["Issuer"] ?? "AskKhadim",
-        ValidAudience = jwtSection["Audience"] ?? "AskKhadimClient",
+        ValidIssuer = jwtSection["Issuer"],
+        ValidAudience = jwtSection["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+        NameClaimType = JwtRegisteredClaimNames.Sub,
+        RoleClaimType = ClaimTypes.Role,
         ClockSkew = TimeSpan.FromSeconds(30)
     };
+
 });
 
 // ---------- Authorization ----------

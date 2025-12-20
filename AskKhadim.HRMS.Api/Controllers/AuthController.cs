@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using AskKhadim.HRMS.Infrastructure.Data;
 using AskKhadim.HRMS.Infrastructure.Models;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace AskKhadim.HRMS.Api.Controllers
 {
@@ -62,14 +63,27 @@ namespace AskKhadim.HRMS.Api.Controllers
         private List<Claim> BuildClaims(core_user user, List<string> roles)
         {
             var claims = new List<Claim>
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, user.id.ToString()),
+
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+
+        new Claim(JwtRegisteredClaimNames.Email, user.email),
+
+        new Claim("token_type", "access"),
+        new Claim("ver", "1")
+    };
+
+            if (user.organization_id.HasValue)
             {
-                new Claim(ClaimTypes.NameIdentifier, user.id.ToString()),
-                new Claim(ClaimTypes.Email, user.email)
-            };
+                claims.Add(new Claim("org_id", user.organization_id.Value.ToString()));
+            }
 
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+
             return claims;
         }
+
 
 
         [HttpPost("login")]

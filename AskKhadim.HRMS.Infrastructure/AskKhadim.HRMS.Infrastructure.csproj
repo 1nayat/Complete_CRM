@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AskKhadim.HRMS.Application\AskKhadim.HRMS.Application.csproj" />
     <ProjectReference Include="..\AskKhadim.HRMS.Domain\AskKhadim.HRMS.Domain.csproj" />
   </ItemGroup>
 
