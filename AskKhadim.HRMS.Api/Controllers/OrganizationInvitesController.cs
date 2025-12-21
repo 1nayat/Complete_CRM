@@ -17,8 +17,6 @@ public class OrganizationInvitesController : ControllerBase
         _db = db;
     }
   
-
-
     [HttpPost("accept")]
     public async Task<IActionResult> AcceptInvite([FromBody] AcceptInviteDto dto)
     {
