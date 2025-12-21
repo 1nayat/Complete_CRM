@@ -16,8 +16,6 @@ public class OrganizationInvitesController : ControllerBase
     {
         _db = db;
     }
-  
-
 
     [HttpPost("accept")]
     public async Task<IActionResult> AcceptInvite([FromBody] AcceptInviteDto dto)
@@ -35,48 +33,46 @@ public class OrganizationInvitesController : ControllerBase
         if (invite == null)
             return BadRequest("Invalid or expired invitation.");
 
-        var existingUser = await _db.core_users
-            .FirstOrDefaultAsync(u => u.email == invite.email);
+        // 1️⃣ Find existing employee user (MUST exist)
+        var user = await _db.core_users
+            .FirstOrDefaultAsync(u =>
+                u.email == invite.email &&
+                u.organization_id == invite.organization_id);
 
-        core_user user;
+        if (user == null)
+            return BadRequest("Employee record not found. Please contact admin.");
 
-        if (existingUser == null)
-        {
-            user = new core_user
-            {
-                user_uuid = Guid.NewGuid(),
-                email = invite.email,
-                employee_id = invite.email,
-                password_hash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                is_active = true,
-                email_verified = true,
-                organization_id = invite.organization_id,
-                created_at = DateTime.UtcNow,
-                updated_at = DateTime.UtcNow
-            };
+        // 2️⃣ Update password + activate account
+        user.password_hash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+        user.is_active = true;
+        user.email_verified = true;
+        user.updated_at = DateTime.UtcNow;
 
-            _db.core_users.Add(user);
-            await _db.SaveChangesAsync();
-        }
-        else
-        {
-            return Conflict("User already exists. Please login.");
-        }
+        // 3️⃣ Transition HR status: Onboarding → Active
+        var userHr = await _db.user_hrs
+            .FirstOrDefaultAsync(h => h.user_id == user.id);
 
-        var userRole = new user_role
+        if (userHr == null)
+            return BadRequest("HR record not found for employee.");
+
+        userHr.employment_status = "Active";
+        userHr.confirmation_date = DateOnly.FromDateTime(DateTime.UtcNow);
+        userHr.updated_at = DateTime.UtcNow;
+
+        // 4️⃣ Assign role
+        _db.user_roles.Add(new user_role
         {
             user_id = user.id,
             role_id = invite.role_id,
             organization_id = invite.organization_id,
             assigned_at = DateTime.UtcNow
-        };
+        });
 
-        _db.user_roles.Add(userRole);
-
-        _db.organization_invitations.Remove(invite);
+        // 5️⃣ Mark invite as accepted (keep for audit)
+        invite.accepted_at = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
 
-        return Ok("Invitation accepted. Account created.");
+        return Ok("Invitation accepted. Account activated.");
     }
 }

@@ -4,9 +4,13 @@ using System.Security.Claims;
 using System.Text;
 using AskKhadim.HRMS.Api.Security;
 using AskKhadim.HRMS.Application.Common.Security;
+using AskKhadim.HRMS.Application.Employees.Create;
+using AskKhadim.HRMS.Domain.Repository;
+
 
 // Adjust these if your concrete types live in different namespaces:
 using AskKhadim.HRMS.Infrastructure.Data;
+using AskKhadim.HRMS.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;         // AskKhadimDbContext
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -35,6 +39,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<CreateEmployeeHandler>();
 
 
 
