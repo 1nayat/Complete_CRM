@@ -5,9 +5,11 @@ using System.Text;
 using AskKhadim.HRMS.Api.Security;
 using AskKhadim.HRMS.Application.Common.Security;
 using AskKhadim.HRMS.Application.Employees.Create;
+using AskKhadim.HRMS.Application.Employees.Deactivate;
+using AskKhadim.HRMS.Application.Employees.Get;
+using AskKhadim.HRMS.Application.Employees.List;
+using AskKhadim.HRMS.Application.Employees.Update;
 using AskKhadim.HRMS.Domain.Repository;
-
-
 // Adjust these if your concrete types live in different namespaces:
 using AskKhadim.HRMS.Infrastructure.Data;
 using AskKhadim.HRMS.Infrastructure.Repositories;
@@ -33,14 +35,40 @@ builder.Services.AddDbContext<AskKhadimDbContext>(options =>
 );
 
 // ---------- DI: Token service + repositories ----------
+// =========================
+// Core / Auth / Infrastructure
+// =========================
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
+
+// =========================
+// Employee Repositories
+// =========================
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IEmployeeReadRepository, EmployeeReadRepository>();
+
+
+// =========================
+// Employee Handlers (WRITE)
+// =========================
 builder.Services.AddScoped<CreateEmployeeHandler>();
+builder.Services.AddScoped<UpdateEmployeeHandler>();
+builder.Services.AddScoped<DeactivateEmployeeHandler>();
+
+
+// =========================
+// Employee Handlers (READ)
+// =========================
+builder.Services.AddScoped<GetEmployeeHandler>();
+builder.Services.AddScoped<GetEmployeesHandler>();
+
 
 
 
