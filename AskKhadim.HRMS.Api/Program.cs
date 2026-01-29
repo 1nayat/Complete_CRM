@@ -2,6 +2,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AskKhadim.HRMS.Api.Authorization;
 using AskKhadim.HRMS.Api.Security;
 using AskKhadim.HRMS.Application.Common.Security;
 using AskKhadim.HRMS.Application.Employees.Create;
@@ -115,6 +116,8 @@ builder.Services.AddAuthentication(options =>
 
 // ---------- Authorization ----------
 builder.Services.AddAuthorization();
+PermissionPolicies.Register(builder.Services);
+
 
 // ---------- Swagger (with Authorize button) ----------
 builder.Services.AddEndpointsApiExplorer();

@@ -12,51 +12,50 @@ namespace AskKhadim.HRMS.Infrastructure.Seed
 {
     public static class SeedSuperAdminDirect
     {
-        // Call this from Program.cs during startup after DbContext is registered:
-        // using (var scope = app.Services.CreateScope()) { await SeedSuperAdminDirect.EnsureSuperAdminAsync(scope.ServiceProvider); }
         public static async Task EnsureSuperAdminAsync(IServiceProvider services)
         {
             using var scope = services.CreateScope();
             var provider = scope.ServiceProvider;
             var logger = provider.GetService<ILoggerFactory>()?.CreateLogger("SeedSuperAdminDirect");
 
+            // 🔴 PROOF: Seeder execution
+            Console.WriteLine(">>> SeedSuperAdminDirect EXECUTING <<<");
+
             try
             {
                 var config = provider.GetService<IConfiguration>();
                 var db = provider.GetRequiredService<AskKhadimDbContext>();
 
-                string ? superPassword = null;
+                // 🔴 PROOF: Which DB is EF connected to
+                Console.WriteLine($"Seeder DB = {db.Database.GetDbConnection().Database}");
+
+                string? superPassword = null;
                 if (config != null)
                 {
-                    superPassword = config["SUPERADMIN_PASSWORD"] ?? config["Seed:SuperAdminPassword"]!;
+                    superPassword = config["SUPERADMIN_PASSWORD"] ?? config["Seed:SuperAdminPassword"];
                 }
 
                 if (string.IsNullOrWhiteSpace(superPassword))
                 {
-                    superPassword = Environment.GetEnvironmentVariable("SUPERADMIN_PASSWORD")!;
+                    superPassword = Environment.GetEnvironmentVariable("SUPERADMIN_PASSWORD");
                 }
 
                 var usedFallback = false;
                 if (string.IsNullOrWhiteSpace(superPassword))
                 {
                     usedFallback = true;
-                    logger?.LogWarning("SUPERADMIN_PASSWORD not provided via configuration or environment. Using insecure fallback password (dev only). Change immediately in production.");
-                    superPassword = "superadmin"; 
-                }
-                else
-                {
-                    logger?.LogInformation("SUPERADMIN_PASSWORD found in configuration/environment. (value not logged)");
+                    logger?.LogWarning("SUPERADMIN_PASSWORD missing. Using fallback (DEV ONLY).");
+                    superPassword = "superadmin";
                 }
 
                 var superEmail = "superadmin@askkhadim.com";
-                var superUsername = "superadmin";
                 var superEmployeeId = "SUPERADMIN";
 
-                // Ensure Role exists
+                // ---------- ROLE ----------
                 var superRole = await db.roles.FirstOrDefaultAsync(r => r.role_name == "SuperAdmin");
                 if (superRole == null)
                 {
-                    logger?.LogInformation("SuperAdmin role not found — creating it now.");
+                    Console.WriteLine("SuperAdmin role NOT found. Creating...");
                     superRole = new role
                     {
                         role_id = Guid.NewGuid(),
@@ -67,29 +66,36 @@ namespace AskKhadim.HRMS.Infrastructure.Seed
                     db.roles.Add(superRole);
                     await db.SaveChangesAsync();
                 }
+                else
+                {
+                    Console.WriteLine("SuperAdmin role already exists.");
+                }
 
+                // ---------- USER ----------
                 var existing = await db.core_users.FirstOrDefaultAsync(u => u.email == superEmail);
                 if (existing != null)
                 {
-                    logger?.LogInformation("SuperAdmin already exists with email {Email} (id={Id}).", superEmail, existing.id);
+                    Console.WriteLine("SuperAdmin user already exists.");
 
-                    var mappingExists = await db.user_roles.AnyAsync(ur => ur.user_id == existing.id && ur.role_id == superRole.role_id);
+                    var mappingExists = await db.user_roles
+                        .AnyAsync(ur => ur.user_id == existing.id && ur.role_id == superRole.role_id);
+
                     if (!mappingExists)
                     {
+                        Console.WriteLine("Assigning SuperAdmin role to existing user.");
                         db.user_roles.Add(new user_role
                         {
                             user_id = existing.id,
                             role_id = superRole.role_id,
-                            organization_id = null,
-                            assigned_at = DateTime.UtcNow,
-                            assigned_by = null
+                            assigned_at = DateTime.UtcNow
                         });
                         await db.SaveChangesAsync();
-                        logger?.LogInformation("Assigned SuperAdmin role to existing user {Email}.", superEmail);
                     }
 
                     return;
                 }
+
+                Console.WriteLine("Creating SuperAdmin user.");
 
                 var hashed = BCrypt.Net.BCrypt.HashPassword(superPassword);
 
@@ -98,49 +104,32 @@ namespace AskKhadim.HRMS.Infrastructure.Seed
                     user_uuid = Guid.NewGuid(),
                     employee_id = superEmployeeId,
                     email = superEmail,
-                    password_hash = hashed,    
+                    password_hash = hashed,
                     is_active = true,
                     email_verified = true,
-                    notice_period_days = 0,
-                    linkedin_profile_url = null,
-                    last_login = null,
                     created_at = DateTime.UtcNow,
                     updated_at = DateTime.UtcNow
                 };
 
                 db.core_users.Add(user);
-                await db.SaveChangesAsync(); 
+                await db.SaveChangesAsync();
 
                 db.user_roles.Add(new user_role
                 {
                     user_id = user.id,
                     role_id = superRole.role_id,
-                    organization_id = null,
-                    assigned_at = DateTime.UtcNow,
-                    assigned_by = null
+                    assigned_at = DateTime.UtcNow
                 });
 
                 await db.SaveChangesAsync();
 
-                db.audit_logs.Add(new audit_log
-                {
-                    actor_user_id = user.id,
-                    actor_role = "SuperAdmin",
-                    action_type = "SeedCreate",
-                    entity_type = "core_user",
-                    entity_id = user.id.ToString(),
-                    old_value = null,
-                    new_value = $"Created superadmin {superEmail}",
-                    timestamp = DateTime.UtcNow,
-                    correlation_id = Guid.NewGuid()
-                });
-
-                await db.SaveChangesAsync();
-
-                logger?.LogInformation("SuperAdmin user created and role assigned. Email={Email}, id={Id}. FallbackPasswordUsed={Fallback}", superEmail, user.id, usedFallback);
+                Console.WriteLine(
+                    $"Seeder DONE. Users={await db.core_users.CountAsync()}, Roles={await db.roles.CountAsync()}"
+                );
             }
             catch (Exception ex)
             {
+                Console.WriteLine("Seeder FAILED with exception.");
                 var logger2 = services.GetService<ILoggerFactory>()?.CreateLogger("SeedSuperAdminDirect");
                 logger2?.LogError(ex, "Error while seeding SuperAdmin user");
                 throw;

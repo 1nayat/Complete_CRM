@@ -25,14 +25,12 @@ public sealed class EmployeeRepository : IEmployeeRepository
     {
         using var tx = await _db.Database.BeginTransactionAsync();
 
-        // 1️⃣ Validate department (org-scoped)
         var departmentExists = await _db.departments
             .AnyAsync(d => d.department_id == emp.DepartmentId);
 
         if (!departmentExists)
             throw new InvalidOperationException("Invalid department for this organization.");
 
-        // 2️⃣ Create dormant user
         var user = new core_user
         {
             user_uuid = Guid.NewGuid(),
@@ -47,7 +45,6 @@ public sealed class EmployeeRepository : IEmployeeRepository
         _db.core_users.Add(user);
         await _db.SaveChangesAsync();
 
-        // 3️⃣ Basic profile
         _db.user_profiles.Add(new user_profile
         {
             user_id = user.id,
