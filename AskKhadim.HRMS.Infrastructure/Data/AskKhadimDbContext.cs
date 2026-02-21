@@ -1,13 +1,15 @@
-﻿using System;
-using System.Reflection;
-using System.Security;
-using System.Threading;
-using System.Threading.Tasks;
-using AskKhadim.HRMS.Application.Common.Security;
+﻿using AskKhadim.HRMS.Application.Common.Security;
 using AskKhadim.HRMS.Domain.Common;
 using AskKhadim.HRMS.Infrastructure.Models;
 using AskKhadim.HRMS.Infrastructure.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using System;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Security;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AskKhadim.HRMS.Infrastructure.Data;
 
@@ -86,6 +88,45 @@ public partial class AskKhadimDbContext : DbContext
             entity.HasOne<Permission>()
                   .WithMany()
                   .HasForeignKey(e => e.PermissionId);
+        });
+        modelBuilder.Entity<user_hr>(entity =>
+        {
+            // ---------- helper for DB defaults ----------
+            void DbDefault<T>(
+                Expression<Func<user_hr, T>> prop,
+                object value)
+            {
+                entity.Property(prop)
+                    .HasDefaultValue(value)
+                    .ValueGeneratedOnAdd()
+                    .Metadata.SetBeforeSaveBehavior(PropertySaveBehavior.Ignore);
+            }
+
+            // ---------- DB DEFAULT columns ----------
+            DbDefault(e => e.access_type, "Limited Access");
+            DbDefault(e => e.work_type, "On Site");
+            DbDefault(e => e.employment_type, "Full Time");
+            DbDefault(e => e.employment_status, "Onboarding");
+            DbDefault(e => e.access_level, 1);
+
+            // ---------- COMPUTED column ----------
+            entity.Property(e => e.total_experience_years)
+                .HasComputedColumnSql(
+                    @"(
+                prior_total_experience_years +
+                ISNULL(
+                    DATEDIFF(
+                        MONTH,
+                        joining_date,
+                        ISNULL(exit_date, CAST(SYSUTCDATETIME() AS DATE))
+                    ) / 12.0,
+                    0
+                )
+            )",
+                    stored: false
+                )
+                .ValueGeneratedOnAddOrUpdate()
+                .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
         });
 
         modelBuilder.Entity<v_user_profile_basic>()
