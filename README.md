@@ -7,7 +7,7 @@ designed for scalability, security, and clean separation of concerns.
 
  Features
 
--  Multi-Tenant Data Isolation (Tenant-based data filtering)  
+-  Multi-Tenant Data Isolation (Tenant-based data filtering)    
 -  JWT Authentication with Refresh Token Mechanism
 -  Role-Based Access Control (RBAC)
 -  Audit Logging (Create, Update, Delete tracking)
