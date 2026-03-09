@@ -28,7 +28,7 @@ Domain Rules
 
 Application Layer
 DTOs
-Service Interfaces
+Service Interfaces 
 Business Logic
 Validation 
 
