@@ -11,7 +11,7 @@ designed for scalability, security, and clean separation of concerns.
 -  JWT Authentication with Refresh Token Mechanism     
 -  Role-Based Access Control (RBAC)
 -  Audit Logging (Create, Update, Delete tracking)
--  Clean Onion Architecture  
+-  Clean Onion Architecture    
 -  Repository Pattern 
 -  Entity Framework Core
 -  Fluent Apis  
