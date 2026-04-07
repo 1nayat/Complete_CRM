@@ -14,7 +14,7 @@ designed for scalability, security, and clean separation of concerns.
 -  Clean Onion Architecture    
 -  Repository Pattern 
 -  Entity Framework Core
--  Fluent Apis  
+-  Fluent Apis   
 -  Soft Deletes
 -  API Versioning
 -  Structured Logging
