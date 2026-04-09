@@ -10,7 +10,7 @@ designed for scalability, security, and clean separation of concerns.
 -  Multi-Tenant Data Isolation (Tenant-based data filtering)    
 -  JWT Authentication with Refresh Token Mechanism     
 -  Role-Based Access Control (RBAC)
--  Audit Logging (Create, Update, Delete tracking)
+-  Audit Logging (Create, Update, Delete tracking) 
 -  Clean Onion Architecture    
 -  Repository Pattern 
 -  Entity Framework Core
