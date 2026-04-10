@@ -12,7 +12,7 @@ designed for scalability, security, and clean separation of concerns.
 -  Role-Based Access Control (RBAC)
 -  Audit Logging (Create, Update, Delete tracking) 
 -  Clean Onion Architecture    
--  Repository Pattern 
+-  Repository Pattern  
 -  Entity Framework Core
 -  Fluent Apis   
 -  Soft Deletes
