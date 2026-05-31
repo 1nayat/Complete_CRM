@@ -62,8 +62,7 @@ Captures:
 UserId
 TenantId
 
-Tech Stack
-
+Tech Stack:
 ASP.NET Core Web API
 C#
 Entity Framework Core
