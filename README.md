@@ -3,7 +3,7 @@ Multi-Tenant CRM System (ASP.NET Core Web API)
 An enterprise-grade Customer Relationship Management (CRM) backend built using ASP.NET Core Web API following Onion Architecture principles.
   
 This system supports multi-tenant isolation, JWT-based authentication with refresh tokens, audit logging, and email-based user invitation workflows
-designed for scalability, security, and clean separation of concerns.
+designed for scalability, security, and clean separation of concerns. 
  
  Features 
   
