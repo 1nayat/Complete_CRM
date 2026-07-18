@@ -6,9 +6,9 @@ This system supports multi-tenant isolation, JWT-based authentication with refre
 designed for scalability, security, and clean separation of concerns. 
  
  Features  
-  
+   
 -  Multi-Tenant Data Isolation (Tenant-based data filtering)                 
--  JWT Authentication with Refresh Token Mechanism        
+-  JWT Authentication with Refresh Token Mechanism         
 -  Role-Based Access Control (RBAC)     
 -  Audit Logging (Create, Update, Delete tracking)      
 -  Clean Onion Architecture      
