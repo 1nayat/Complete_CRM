@@ -13,7 +13,7 @@ designed for scalability, security, and clean separation of concerns.
 -  Audit Logging (Create, Update, Delete tracking)      
 -  Clean Onion Architecture      
 -  Repository Pattern    
--  Entity Framework Core 
+-  Entity Framework Core  
 -  Fluent Apis    
 -  Soft Deletes
 -  API Versioning
