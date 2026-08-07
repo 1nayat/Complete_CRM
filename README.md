@@ -5,7 +5,7 @@ An enterprise-grade Customer Relationship Management (CRM) backend built using A
 This system supports multi-tenant isolation, JWT-based authentication with refresh tokens, audit logging, and email-based user invitation workflows
 designed for scalability, security, and clean separation of concerns. 
  
- Features   
+ Features    
     
 -  Multi-Tenant Data Isolation (Tenant-based data filtering)                 
 -  JWT Authentication with Refresh Token Mechanism           
