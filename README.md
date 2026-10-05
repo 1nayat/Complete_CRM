@@ -64,7 +64,7 @@ TenantId
 
 Tech Stack:
 ASP.NET Core Web API
-C#
+C# 
 Entity Framework Core
 SQL Server
 JWT Authentication
